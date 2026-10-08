@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Health check connectivity document
+    match /test/connection {
+      allow read: if true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidParticipant(data) {
+      return data.profileId is string && data.profileId.size() > 0 && data.profileId.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 150
+        && data.ideaName is string && data.ideaName.size() > 0 && data.ideaName.size() <= 150
+        && data.organization is string && data.organization.size() > 0 && data.organization.size() <= 200
+        && data.country is string && data.country.size() > 0 && data.country.size() <= 100
+        && data.role is string && data.role.size() > 0 && data.role.size() <= 150
+        && (!('bio' in data) || (data.bio is string && data.bio.size() <= 1500))
+        && (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 2000000))
+        && (!('expertise' in data) || (data.expertise is list && data.expertise.size() <= 20))
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 50))
+        && (!('whatsapp' in data) || (data.whatsapp is string && data.whatsapp.size() <= 50))
+        && (!('email' in data) || (data.email is string && data.email.size() <= 150))
+        && (!('linkedin' in data) || (data.linkedin is string && data.linkedin.size() <= 200))
+        && (!('website' in data) || (data.website is string && data.website.size() <= 300))
+        && (!('instagram' in data) || (data.instagram is string && data.instagram.size() <= 100))
+        && (!('editToken' in data) || (data.editToken is string && data.editToken.size() >= 16 && data.editToken.size() <= 128));
+    }
+
+    match /participants/{profileId} {
+      // Single-document read (get) validates document ID
+      allow get: if isValidId(profileId);
+
+      // Collection list queries allow directory discovery
+      allow list: if true;
+      
+      allow create: if isValidId(profileId)
+                    && incoming().profileId == profileId
+                    && isValidParticipant(incoming());
+
+      allow update: if isValidId(profileId)
+                    && incoming().profileId == existing().profileId
+                    && isValidParticipant(incoming())
+                    && (
+                      // Only caller supplying the correct matching unguessable edit token can update
+                      (!('editToken' in existing()) || (existing().editToken is string && incoming().editToken == existing().editToken))
+                    );
+
+      allow delete: if false;
+    }
+  }
+}

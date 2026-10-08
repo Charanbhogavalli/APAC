@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "Participant": {
+      "title": "Participant",
+      "description": "Official conference delegate profile at APAC Rural Connect 2026.",
+      "type": "object",
+      "properties": {
+        "profileId": {
+          "type": "string",
+          "description": "Unique URL-safe identifier for the participant."
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the participant.",
+          "maxLength": 100
+        },
+        "ideaName": {
+          "type": "string",
+          "description": "Name of the participant's rural innovation or project.",
+          "maxLength": 100
+        },
+        "organization": {
+          "type": "string",
+          "description": "Participant's institutional or organizational affiliation.",
+          "maxLength": 150
+        },
+        "country": {
+          "type": "string",
+          "description": "Country of origin or delegation.",
+          "maxLength": 80
+        },
+        "role": {
+          "type": "string",
+          "description": "Professional position or title.",
+          "maxLength": 100
+        },
+        "photoUrl": {
+          "type": "string",
+          "description": "Public URL or storage URI of the profile photo."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Telephone contact number.",
+          "maxLength": 30
+        },
+        "whatsapp": {
+          "type": "string",
+          "description": "WhatsApp direct contact number.",
+          "maxLength": 30
+        },
+        "email": {
+          "type": "string",
+          "description": "Professional email address.",
+          "maxLength": 100
+        },
+        "linkedin": {
+          "type": "string",
+          "description": "LinkedIn profile link or username.",
+          "maxLength": 150
+        },
+        "website": {
+          "type": "string",
+          "description": "Project or personal website URL.",
+          "maxLength": 200
+        },
+        "instagram": {
+          "type": "string",
+          "description": "Instagram handle or URL.",
+          "maxLength": 100
+        },
+        "expertise": {
+          "type": "array",
+          "description": "List of core subject areas and expertise tags."
+        },
+        "bio": {
+          "type": "string",
+          "description": "Concise professional biography or project scope summary.",
+          "maxLength": 1000
+        },
+        "visibility": {
+          "type": "object",
+          "description": "Privacy visibility controls for contact fields (public or private)."
+        },
+        "editToken": {
+          "type": "string",
+          "description": "Secret unguessable credential token for authorized profile editing without global password/auth."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of profile creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last profile update."
+        }
+      },
+      "required": ["profileId", "name", "ideaName", "organization", "country", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/participants/{profileId}": {
+      "schema": "Participant",
+      "description": "Collection of all registered conference delegate profiles."
+    }
+  }
+}

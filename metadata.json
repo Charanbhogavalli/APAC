@@ -1,0 +1,6 @@
+{
+  "name": "APAC Rural Connect",
+  "description": "The official digital participant directory for the Asia-Pacific Conference on Innovations in Rural Development, Sri Lanka 2026.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
