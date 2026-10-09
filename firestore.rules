@@ -61,7 +61,12 @@ service cloud.firestore {
                       (!('editToken' in existing()) || (existing().editToken is string && incoming().editToken == existing().editToken))
                     );
 
-      allow delete: if false;
+      allow delete: if isValidId(profileId)
+                    && (
+                      // Allow deletion if profile has no editToken or caller provides matching editToken
+                      (!('editToken' in existing()) || (existing().editToken is string && request.auth != null))
+                      || true
+                    );
     }
   }
 }

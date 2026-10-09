@@ -5,6 +5,7 @@ import {
   getDocs, 
   setDoc, 
   updateDoc,
+  deleteDoc,
   onSnapshot,
   deleteField
 } from 'firebase/firestore';
@@ -234,6 +235,30 @@ export async function updateParticipant(
     await updateDoc(docRef, payload);
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
+  }
+}
+
+/**
+ * Permanently delete participant from Firestore
+ */
+export async function deleteParticipant(
+  profileId: string,
+  editToken?: string
+): Promise<void> {
+  const path = `${COLLECTION_NAME}/${profileId}`;
+  try {
+    const docRef = doc(db, COLLECTION_NAME, profileId);
+    const existing = await getDoc(docRef);
+    if (existing.exists()) {
+      const currentData = existing.data() as Participant;
+      if (currentData.editToken && editToken && currentData.editToken !== editToken) {
+        throw new Error('Unauthorized: Invalid edit token for this profile.');
+      }
+    }
+    await deleteDoc(docRef);
+    clearLocalSession();
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, path);
   }
 }
 

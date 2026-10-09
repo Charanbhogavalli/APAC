@@ -189,6 +189,14 @@ export default function App() {
     );
   };
 
+  // When profile is deleted
+  const handleProfileDeleted = () => {
+    setSession(null);
+    setUserProfile(null);
+    loadParticipants();
+    handleNavigate({ type: 'home' });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf8ff] text-[#161a33]">
       {/* Official Sticky Header */}
@@ -239,6 +247,7 @@ export default function App() {
             session={session}
             onNavigate={handleNavigate}
             onProfileUpdated={handleProfileUpdated}
+            onProfileDeleted={handleProfileDeleted}
           />
         )}
 

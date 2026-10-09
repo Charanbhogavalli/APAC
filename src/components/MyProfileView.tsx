@@ -3,6 +3,7 @@ import { Participant, ViewState, LocalSessionProfile, ContactVisibility, Contact
 import { 
   fetchParticipantById, 
   updateParticipant, 
+  deleteParticipant,
   uploadProfilePhoto 
 } from '../services/participantService';
 import { CameraCaptureModal } from './CameraCaptureModal';
@@ -13,12 +14,14 @@ interface MyProfileViewProps {
   session: LocalSessionProfile | null;
   onNavigate: (view: ViewState) => void;
   onProfileUpdated: (updated: Participant) => void;
+  onProfileDeleted?: () => void;
 }
 
 export const MyProfileView: React.FC<MyProfileViewProps> = ({
   session,
   onNavigate,
   onProfileUpdated,
+  onProfileDeleted,
 }) => {
   const [participant, setParticipant] = useState<Participant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +32,8 @@ export const MyProfileView: React.FC<MyProfileViewProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Editable Form fields
   const [name, setName] = useState('');
@@ -229,6 +234,25 @@ export const MyProfileView: React.FC<MyProfileViewProps> = ({
       setSaveError('Unable to update your profile. Please check connection and try again.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!session || !participant) return;
+    setIsDeleting(true);
+    setSaveError(null);
+    try {
+      await deleteParticipant(session.profileId, session.editToken);
+      if (onProfileDeleted) {
+        onProfileDeleted();
+      } else {
+        onNavigate({ type: 'home' });
+      }
+    } catch (err) {
+      console.error('Failed to delete profile:', err);
+      setSaveError('Unable to delete profile from database. Please check connection and try again.');
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -810,6 +834,25 @@ export const MyProfileView: React.FC<MyProfileViewProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Danger Zone: Delete Account */}
+              <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-[#ffdad6] mt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-[#ba1a1a] text-[20px]">delete_forever</span>
+                  <h3 className="text-base font-bold text-[#ba1a1a]">Delete Account</h3>
+                </div>
+                <p className="text-[13px] text-[#747688] mb-4 leading-relaxed">
+                  Permanently remove your profile and digital badge from the conference database and directory.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-4 py-2.5 rounded-xl border border-[#ffdad6] text-[#ba1a1a] hover:bg-[#ffdad6]/30 font-bold text-[13px] flex items-center gap-2 transition-colors cursor-pointer w-full justify-center"
+                >
+                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                  <span>Delete Profile from Database</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -820,6 +863,49 @@ export const MyProfileView: React.FC<MyProfileViewProps> = ({
         onClose={() => setIsCameraOpen(false)}
         onCapture={handleCameraCapture}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#dee0ed]">
+            <div className="w-12 h-12 rounded-2xl bg-[#ffdad6] text-[#ba1a1a] flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-[28px]">warning</span>
+            </div>
+            <h3 className="text-xl font-bold text-[#161a33] mb-2">Delete profile permanently?</h3>
+            <p className="text-[14px] text-[#444656] mb-6 leading-relaxed">
+              This will permanently remove your profile, data, and digital badge for <strong>{participant.name}</strong> from the database. This action cannot be undone.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-5 py-2.5 rounded-full bg-[#f4f2ff] hover:bg-[#edecff] text-[#444656] font-bold text-[13px] cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteProfile}
+                className="px-5 py-2.5 rounded-full bg-[#ba1a1a] hover:bg-[#93000a] text-white font-bold text-[13px] flex items-center gap-1.5 transition-all cursor-pointer shadow-md disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">delete_forever</span>
+                    <span>Yes, Delete Account</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
